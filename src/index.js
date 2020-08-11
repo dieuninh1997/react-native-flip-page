@@ -43,7 +43,8 @@ class FlipPage extends React.Component {
   }
 
   lastPage() {
-    return this.props.children.length - 1;
+    const _children = this.getChildren();
+    return _children.length - 1;
   }
 
   isOnFirstPage() {
@@ -269,9 +270,10 @@ class FlipPage extends React.Component {
     const { orientation, reverse } = this.props;
     const dn = orientation === 'vertical' ? dy : dx;
     const absAngle = Math.abs(angle);
-
+    const _children = this.getChildren();
     if (dn === 0) {
-      const { onPress } = this.props.children[page].props;
+      // const { onPress } = this.props.children[page].props;
+      const { onPress } = _children[page].props;
       if (typeof onPress === 'function') {
         onPress();
       }
@@ -370,19 +372,22 @@ class FlipPage extends React.Component {
   }
 
   renderPage(component, index) {
-    const { children, orientation, loopForever ,reverse } = this.props;
-    const pages = children.length;
+    const { orientation, loopForever ,reverse } = this.props;
+    
+
+    let _children = this.getChildren();
+    const pages = _children.length;
 
     const thisPage = component;
     let nextPage;
     let previousPage;
     if (reverse) {
-      previousPage = index + 1 < pages ? children[index + 1] : (loopForever ? children[0] : null);
-      nextPage = index > 0 ? children[index - 1] : (loopForever ? children[pages - 1] : null);
+      previousPage = index + 1 < pages ? _children[index + 1] : (loopForever ? _children[0] : null);
+      nextPage = index > 0 ? _children[index - 1] : (loopForever ? _children[pages - 1] : null);
     }
     else {
-      nextPage = index + 1 < pages ? children[index + 1] : (loopForever ? children[0] : null);
-      previousPage = index > 0 ? children[index - 1] : (loopForever ? children[pages - 1] : null);
+      nextPage = index + 1 < pages ? _children[index + 1] : (loopForever ? _children[0] : null);
+      previousPage = index > 0 ? _children[index - 1] : (loopForever ? _children[pages - 1] : null);
     }
     if (orientation === 'vertical') {
       return this.renderVerticalPage(previousPage, thisPage, nextPage, index);
@@ -391,18 +396,42 @@ class FlipPage extends React.Component {
     }
   }
 
-  render() {
+  getChildren= ()=> {
     const { children } = this.props;
+    let _children = [];
+    if (children.length > 1) {
+      children.map(_child => {
+        if (_child.length > 1) {
+          _child.map(item => {
+            _children.push(item);
+          })
+        } else {
+          _children.push(_child);
+        }
+      })
+      
+    } else {
+      _children.push(children[0]);
+    }
+    return _children;
+  }
+
+  render() {
     const { page, halfWidth, halfHeight } = this.state;
     const from = page > 0 ? page - 1 : 0;
     const to = from + 3;
+
+    let _children = this.getChildren();
+   
+
     return (
       <View
         style={styles.container}
         {...this.panResponder.panHandlers}
         onLayout={this.onLayout}
       >
-        {!!halfWidth && !!halfHeight && children.slice(from, to).map((component, index) => this.renderPage(component, from + index))}
+        {!!halfWidth && !!halfHeight && 
+        _children.slice(from, to).map((component, index) => this.renderPage(component, from + index))}
       </View>
     );
   }
