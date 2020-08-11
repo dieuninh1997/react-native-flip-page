@@ -3,6 +3,7 @@ import {
   PanResponder,
   View,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import PropTypes from 'prop-types';
 import styles from './styles';
@@ -22,6 +23,7 @@ class FlipPage extends React.Component {
       shouldGoNext: false,
       shouldGoPrevious: false,
       direction: '',
+      showLoading: false,
     };
 
     this.firstHalves = [];
@@ -106,6 +108,7 @@ class FlipPage extends React.Component {
     const dn = orientation === 'vertical' ? dy : dx;
 
     let angle = (dn / 250) * 180;
+    let showLoading = false;
 
     if (angle < 0) {
       angle = Math.max(-180, angle);
@@ -124,10 +127,13 @@ class FlipPage extends React.Component {
       if (dn < 0 && (nextDirection === 'top' || nextDirection === 'left')) {
         if (this.isOnFirstPage() && !loopForever) {
           angle = Math.max(angle, -30);
+          this.props.reload();
+          showLoading = true;
         }
         this.rotateSecondHalf(angle);
         this.setState({
           angle,
+          showLoading
         });
       } else if (dn > 0 && (nextDirection === 'bottom' || nextDirection === 'right')) {
         if (this.isOnLastPage() && !loopForever) {
@@ -152,22 +158,37 @@ class FlipPage extends React.Component {
         }
         this.rotateSecondHalf(angle);
         this.setState({
-          angle,
+          angle
         });
       } else if (dn > 0 && (nextDirection === 'bottom' || nextDirection === 'right')) {
         if (this.isOnFirstPage() && !loopForever) {
           angle = Math.min(angle, 30);
+          this.props.reload();
+          showLoading = true;
         }
         this.rotateFirstHalf(angle);
         this.setState({
           angle,
+          showLoading
         });
       }
     }
+    setTimeout( () => {
+      this.hideLoading()
+   },5000);
+  }
+
+
+  resetPage = () => {
+    this.setState({page: 0});
+  }
+
+  hideLoading = () => {
+    this.setState({showLoading: false})
   }
 
   resetHalves() {
-    const { loopForever, children } = this.props;
+    const { loopForever, children, resetPage } = this.props;
     const pages = children.length;
     const {
       angle,
@@ -184,7 +205,7 @@ class FlipPage extends React.Component {
       const { onFinish } = this.props;
       const { direction } = this.state;
       this.setState({ direction: '' });
-
+      
       if (shouldGoNext) {
         this.setState({
           angle: 0,
@@ -381,6 +402,7 @@ class FlipPage extends React.Component {
     const thisPage = component;
     let nextPage;
     let previousPage;
+
     if (reverse) {
       previousPage = index + 1 < pages ? _children[index + 1] : (loopForever ? _children[0] : null);
       nextPage = index > 0 ? _children[index - 1] : (loopForever ? _children[pages - 1] : null);
@@ -417,19 +439,19 @@ class FlipPage extends React.Component {
   }
 
   render() {
-    const { page, halfWidth, halfHeight } = this.state;
+    const { page, halfWidth, halfHeight, showLoading } = this.state;
     const from = page > 0 ? page - 1 : 0;
     const to = from + 3;
 
     let _children = this.getChildren();
-   
-
+    
     return (
       <View
         style={styles.container}
         {...this.panResponder.panHandlers}
         onLayout={this.onLayout}
       >
+        {showLoading && (<ActivityIndicator size="large" color="red" style={{ position: 'absolute', top: 20, alignSelf: 'center', zIndex: 1000 }}/>)}
         {!!halfWidth && !!halfHeight && 
         _children.slice(from, to).map((component, index) => this.renderPage(component, from + index))}
       </View>
@@ -443,6 +465,7 @@ FlipPage.propTypes = {
   onFinish: PropTypes.func,
   onPageChange: PropTypes.func,
   reverse: PropTypes.bool,
+  reload: PropTypes.func,
 };
 
 FlipPage.defaultProps = {
@@ -450,6 +473,7 @@ FlipPage.defaultProps = {
   loopForever: false,
   onFinish: null,
   onPageChange: () => {},
+  reload: () => {},
   reverse: false,
 };
 
