@@ -261,7 +261,7 @@ class FlipPage extends React.Component {
 
         finish();
       }
-    }, 10);
+    }, 100);
   }
 
   handlePanResponderStop(e, gestureState) {
