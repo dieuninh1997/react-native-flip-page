@@ -31,9 +31,6 @@ class FlipPage extends React.Component {
 
     this.onLayout = this.onLayout.bind(this);
     this.renderPage = this.renderPage.bind(this);
-  }
-
-  componentWillMount() {
     this.panResponder = PanResponder.create({
       onMoveShouldSetPanResponder: (evt, gestureState) => {
         const { dx, dy } = gestureState;
